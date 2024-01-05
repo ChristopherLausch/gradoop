@@ -27,12 +27,9 @@ import java.util.SortedSet;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * A group reduce function that merges all Tuples (vId, degreeTree) to a dataset of tuples (time, aggDegree)
- * that represents the aggregated degree value for the whole graph at the given time.
- */
+
 public class GroupDegreeTreesToAggregateDegrees
-        implements GroupReduceFunction<Tuple2<GradoopId, TreeMap<Long, Integer>>, Tuple3<Long, Long, Float>> {
+        implements GroupReduceFunction<Tuple2<Long, Integer>, Tuple2<Long, Float>> {
 
     /**
      * The aggregate type to use (min,max,avg).
@@ -47,75 +44,42 @@ public class GroupDegreeTreesToAggregateDegrees
     public GroupDegreeTreesToAggregateDegrees(AggregationType aggregateType) {
         this.aggregateType = aggregateType;
     }
-
     @Override
-    public void reduce(Iterable<Tuple2<GradoopId, TreeMap<Long, Integer>>> iterable,
-                       Collector<Tuple3<Long, Long, Float>> collector) throws Exception {
+    public void reduce(Iterable<Tuple2<Long, Integer>> values, Collector<Tuple2<Long, Float>> out) {
+        long timestamp = 0;
+        float aggregationResult = 0;
+        switch (aggregateType) {
+            case MIN:
+                for (Tuple2<Long, Integer> value : values) {
+                    timestamp = value.f0;
+                    aggregationResult = Math.min(aggregationResult, value.f1);
+                }
+                break;
+            case MAX:
+                // Choose your aggregation logic (e.g., max, min, avg)
+                for (Tuple2<Long, Integer> value : values) {
+                    timestamp = value.f0;
+                    aggregationResult = Math.max(aggregationResult, value.f1);
+                }
+                break;
 
-        // init necessary maps and set
-        HashMap<GradoopId, TreeMap<Long, Integer>> degreeTrees = new HashMap<>();
-        HashMap<GradoopId, Integer> vertexDegrees = new HashMap<>();
-        SortedSet<Long> timePoints = new TreeSet<>();
+            case AVG:
+                int sum = 0;
+                int count = 0;
+                // Calculate the sum and count for each timestamp
+                for (Tuple2<Long, Integer> value : values) {
+                    timestamp = value.f0;
+                    sum += value.f1;
+                    count++;
+                }
+                aggregationResult = (float) sum / count;
+                break;
 
-        // convert the iterables to a hashmap and remember all possible timestamps
-        for (Tuple2<GradoopId, TreeMap<Long, Integer>> tuple : iterable) {
-            degreeTrees.put(tuple.f0, tuple.f1);
-            timePoints.addAll(tuple.f1.keySet());
+            default:
+                throw new IllegalArgumentException("Aggregate type not specified.");
+
         }
 
-        int numberOfVertices = degreeTrees.size();
-        long lastTimestamp = Long.MIN_VALUE;
-        float degreeValue = 0f;
-
-        // Add default times
-        timePoints.add(Long.MIN_VALUE);
-
-        for (Long timePoint : timePoints) {
-            // Do the collection from the previous loop
-            if (lastTimestamp < timePoint) {
-                collector.collect(new Tuple3<>(lastTimestamp, timePoint, degreeValue));
-            }
-
-            // skip last default time
-            if (Long.MAX_VALUE == timePoint) {
-                continue;
-            }
-
-            // Iterate over all vertices
-            for (Map.Entry<GradoopId, TreeMap<Long, Integer>> entry : degreeTrees.entrySet()) {
-                // Make sure the vertex is registered in the current vertexDegrees capture
-                if (!vertexDegrees.containsKey(entry.getKey())) {
-                    vertexDegrees.put(entry.getKey(), 0);
-                }
-
-                // Check if timestamp is in tree, if not, take the lower key
-                if (entry.getValue().containsKey(timePoint)) {
-                    vertexDegrees.put(entry.getKey(), entry.getValue().get(timePoint));
-                } else {
-                    Long lowerKey = entry.getValue().lowerKey(timePoint);
-                    if (lowerKey != null) {
-                        vertexDegrees.put(entry.getKey(), entry.getValue().get(lowerKey));
-                    }
-                }
-            }
-
-            lastTimestamp = timePoint;
-            // Here, every tree with this time point is iterated. Now we need to aggregate for the current time.
-            switch (aggregateType) {
-                case MIN:
-                    degreeValue = vertexDegrees.values().stream().reduce(Math::min).orElse(0).floatValue();
-                    break;
-                case MAX:
-                    degreeValue = vertexDegrees.values().stream().reduce(Math::max).orElse(0).floatValue();
-                    break;
-                case AVG:
-                    int sum = vertexDegrees.values().stream().reduce(Math::addExact).orElse(0);
-                    degreeValue = (float) sum /  (float) numberOfVertices;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Aggregate type not specified.");
-            }
-            // Collect in next iteration
-        }
+        out.collect(new Tuple2<>(timestamp, aggregationResult));
     }
 }

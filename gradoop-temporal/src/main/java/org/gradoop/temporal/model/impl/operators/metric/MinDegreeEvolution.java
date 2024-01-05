@@ -22,6 +22,7 @@ import org.gradoop.temporal.model.api.TimeDimension;
 import org.gradoop.temporal.model.impl.TemporalGraph;
 import org.gradoop.temporal.model.impl.operators.metric.functions.AggregationType;
 import org.gradoop.temporal.model.impl.operators.metric.functions.GroupDegreeTreesToAggregateDegrees;
+import org.gradoop.temporal.model.impl.operators.metric.functions.MapDegreesToInterval;
 
 /**
  * Operator that calculates the evolution of the graph's minimum degree for the whole lifetime of the graph.
@@ -52,6 +53,8 @@ public class MinDegreeEvolution extends BaseAggregateDegreeEvolution {
 
     @Override
     public DataSet<Tuple3<Long, Long, Float>> execute(TemporalGraph graph) {
-        return preProcess(graph).reduceGroup(new GroupDegreeTreesToAggregateDegrees(AggregationType.MIN));
+        return preProcess(graph)
+                .reduceGroup(new GroupDegreeTreesToAggregateDegrees(AggregationType.MIN))
+                .mapPartition(new MapDegreesToInterval());
     }
 }

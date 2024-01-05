@@ -15,7 +15,9 @@
  */
 package org.gradoop.temporal.model.impl.operators.metric;
 
+import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.common.model.impl.id.GradoopId;
@@ -23,9 +25,7 @@ import org.gradoop.flink.model.api.operators.UnaryBaseGraphToValueOperator;
 import org.gradoop.flink.model.impl.operators.sampling.functions.VertexDegree;
 import org.gradoop.temporal.model.api.TimeDimension;
 import org.gradoop.temporal.model.impl.TemporalGraph;
-import org.gradoop.temporal.model.impl.operators.metric.functions.BuildTemporalDegreeTree;
-import org.gradoop.temporal.model.impl.operators.metric.functions.FlatMapVertexIdEdgeInterval;
-import org.gradoop.temporal.model.impl.operators.metric.functions.TransformDeltaToAbsoluteDegreeTree;
+import org.gradoop.temporal.model.impl.operators.metric.functions.*;
 
 import java.util.Objects;
 import java.util.TreeMap;
@@ -64,14 +64,51 @@ abstract class BaseAggregateDegreeEvolution
         this.dimension = Objects.requireNonNull(dimension);
     }
 
-    /**
-     * A pre-process function to prevent duplicate code for min, max and avg aggregation. The result is an
-     * absolute degree tree for each vertex (id).
-     *
-     * @param graph the temporal graph as input
-     * @return a dataset containing an absolute degree tree for each vertex identifier
-     */
+    //function that returns a tuple<timestamp, degree> for each vertex
+    public DataSet<Tuple2<Long, Integer>> preProcess(TemporalGraph graph) {
+
+
+        //get absolute degree tree
+        DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> absoluteTrees = graph.getEdges()
+                // 1) Extract vertex id(s) and corresponding time intervals
+                .flatMap(new FlatMapVertexIdEdgeInterval(dimension, degreeType))
+                // 2) Group them by the vertex id
+                .groupBy(0)
+                // 3) For each vertex id, build a degree tree data structure
+                .reduceGroup(new BuildTemporalDegreeTree())
+                // 4) Transform each tree to aggregated evolution
+                .map(new TransformDeltaToAbsoluteDegreeTree());
+
+        DataSet<Tuple1<Long>> timestamps = graph.getEdges()
+                .flatMap(new GetTimestamps(dimension, degreeType));
+
+        //sort the timestamps -> Parallelism needs to be set to 1 to sort all timestamps in one job
+        DataSet<Tuple1<Long>> sortedTimestamps = timestamps
+                .sortPartition(0, Order.ASCENDING)
+                .setParallelism(1);
+
+
+        DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> mergedTrees = absoluteTrees
+                .cross(sortedTimestamps)
+                .with(new MergeTreeMapwithDataSet())
+                .groupBy(0)
+                .reduceGroup(new GroupMergedAbsoluteTrees());
+
+        return mergedTrees.flatMap(new FlatMapAbsoluteTreesToDataSet());
+
+
+    }
+
+    /* old preprocess
+   /**
+    * A pre-process function to prevent duplicate code for min, max and avg aggregation. The result is an
+    * absolute degree tree for each vertex (id).
+    *
+    * @param graph the temporal graph as input
+    * @return a dataset containing an absolute degree tree for each vertex identifier
+
     public DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> preProcess(TemporalGraph graph) {
+
         return graph.getEdges()
                 // 1) Extract vertex id(s) and corresponding time intervals
                 .flatMap(new FlatMapVertexIdEdgeInterval(dimension, degreeType))
@@ -82,4 +119,7 @@ abstract class BaseAggregateDegreeEvolution
                 // 4) Transform each tree to aggregated evolution
                 .map(new TransformDeltaToAbsoluteDegreeTree());
     }
+
+
+     */
 }
