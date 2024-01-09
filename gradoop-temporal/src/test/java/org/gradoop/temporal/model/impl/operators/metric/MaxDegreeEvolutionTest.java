@@ -58,17 +58,13 @@ public class MaxDegreeEvolutionTest extends TemporalGradoopTestBase {
         EXPECTED_IN_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0f));
         EXPECTED_IN_DEGREES.add(new Tuple3<>(0L, 4L, 1f));
         EXPECTED_IN_DEGREES.add(new Tuple3<>(4L, 5L, 2f));
-        EXPECTED_IN_DEGREES.add(new Tuple3<>(5L, 6L, 1f));
-        EXPECTED_IN_DEGREES.add(new Tuple3<>(6L, 7L, 1f));
-        EXPECTED_IN_DEGREES.add(new Tuple3<>(7L, Long.MAX_VALUE, 1f));
+        EXPECTED_IN_DEGREES.add(new Tuple3<>(5L, Long.MAX_VALUE, 1f));
 
         // OUT DEGREES
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0f));
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(0L, 4L, 1f));
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(4L, 5L, 2f));
-        EXPECTED_OUT_DEGREES.add(new Tuple3<>(5L, 6L, 1f));
-        EXPECTED_OUT_DEGREES.add(new Tuple3<>(6L, 7L, 1f));
-        EXPECTED_OUT_DEGREES.add(new Tuple3<>(7L, Long.MAX_VALUE, 1f));
+        EXPECTED_OUT_DEGREES.add(new Tuple3<>(5L, Long.MAX_VALUE, 1f));
 
         // DEGREES
         EXPECTED_BOTH_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0f));

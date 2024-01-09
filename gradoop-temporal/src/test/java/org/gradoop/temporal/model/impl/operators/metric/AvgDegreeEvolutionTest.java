@@ -58,24 +58,21 @@ public class AvgDegreeEvolutionTest extends TemporalGradoopTestBase {
         EXPECTED_IN_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0.0f));
         EXPECTED_IN_DEGREES.add(new Tuple3<>(0L, 4L, 0.25f));
         EXPECTED_IN_DEGREES.add(new Tuple3<>(4L, 5L, 1.0f));
-        EXPECTED_IN_DEGREES.add(new Tuple3<>(5L, 6L, 0.5f));
-        EXPECTED_IN_DEGREES.add(new Tuple3<>(6L, 7L, 0.5f));
+        EXPECTED_IN_DEGREES.add(new Tuple3<>(5L, 7L, 0.5f));
         EXPECTED_IN_DEGREES.add(new Tuple3<>(7L, Long.MAX_VALUE, 0.25f));
 
         // OUT DEGREES
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0.0f));
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(0L, 4L, 0.25f));
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(4L, 5L, 1.0f));
-        EXPECTED_OUT_DEGREES.add(new Tuple3<>(5L, 6L, 0.5f));
-        EXPECTED_OUT_DEGREES.add(new Tuple3<>(6L, 7L, 0.5f));
+        EXPECTED_OUT_DEGREES.add(new Tuple3<>(5L, 7L, 0.5f));
         EXPECTED_OUT_DEGREES.add(new Tuple3<>(7L, Long.MAX_VALUE, 0.25f));
 
         // DEGREES
         EXPECTED_BOTH_DEGREES.add(new Tuple3<>(Long.MIN_VALUE, 0L, 0.0f));
         EXPECTED_BOTH_DEGREES.add(new Tuple3<>(0L, 4L, 0.4f));
         EXPECTED_BOTH_DEGREES.add(new Tuple3<>(4L, 5L, 1.6f));
-        EXPECTED_BOTH_DEGREES.add(new Tuple3<>(5L, 6L, 0.8f));
-        EXPECTED_BOTH_DEGREES.add(new Tuple3<>(6L, 7L, 0.8f));
+        EXPECTED_BOTH_DEGREES.add(new Tuple3<>(5L, 7L, 0.8f));
         EXPECTED_BOTH_DEGREES.add(new Tuple3<>(7L, Long.MAX_VALUE, 0.4f));
     }
 
