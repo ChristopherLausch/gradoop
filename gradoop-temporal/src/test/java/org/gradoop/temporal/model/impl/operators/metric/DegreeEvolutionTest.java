@@ -159,7 +159,7 @@ public class DegreeEvolutionTest extends TemporalGradoopTestBase {
 
         absoluteTree.print();
 
-
+/*
         DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> mergedTrees = absoluteTree
                 .cross(sortedDataSet)
                 .with(new MergeTreeMapwithDataSet())
@@ -167,19 +167,27 @@ public class DegreeEvolutionTest extends TemporalGradoopTestBase {
                 .reduceGroup(new GroupMergedAbsoluteTrees());
 
         mergedTrees.print();
+*/
+        DataSet<Tuple2<Long, Integer>> trees = absoluteTree
+                .cross(sortedDataSet)
+                .with(new MergeTreeMapwithDataSet());
 
-        DataSet<Tuple2<Long, Integer>> trees = mergedTrees.flatMap(new FlatMapAbsoluteTreesToDataSet());
+        DataSet<Tuple2<Long, Float>> max = trees.groupBy(0).reduceGroup(new GroupDegreeTreesToAggregateDegrees(AggregationType.MIN));
 
-        DataSet<Tuple2<Long, Float>> max = trees.groupBy(0).reduceGroup(new GroupDegreeTreesToAggregateDegrees(AggregationType.MAX));
+        max.print();
 
         DataSet<Tuple2<Long, Float>> max_sorted = max.sortPartition(0, Order.ASCENDING).setParallelism(1);
 
         max_sorted.print();
 
-        DataSet<Tuple3<Long, Long, Float>> result = max_sorted.mapPartition(new MapDegreesToInterval());
+        DataSet<Tuple3<Long, Long, Float>> result = max.sortPartition(0, Order.ASCENDING).setParallelism(1).mapPartition(new MapDegreesToInterval());
 
         // Print the result or perform other actions
         result.print();
+
+
+
+
     }
 
 

@@ -10,9 +10,9 @@ import org.gradoop.common.model.impl.id.GradoopId;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MergeTreeMapwithDataSet implements CrossFunction<Tuple2<GradoopId, TreeMap<Long, Integer>>, Tuple1<Long>, Tuple2<GradoopId, TreeMap<Long, Integer>>> {
+public class MergeTreeMapwithDataSet implements CrossFunction<Tuple2<GradoopId, TreeMap<Long, Integer>>, Tuple1<Long>, Tuple2<Long, Integer>> {
     @Override
-    public Tuple2<GradoopId, TreeMap<Long, Integer>> cross(
+    public Tuple2<Long, Integer> cross(
             Tuple2<GradoopId, TreeMap<Long, Integer>> input1,
             Tuple1<Long> input2) throws Exception {
 
@@ -22,7 +22,9 @@ public class MergeTreeMapwithDataSet implements CrossFunction<Tuple2<GradoopId, 
 
         // If the TreeMap contains the timestamp, use its value
         if (treeMap.containsKey(timestampFromDataset)) {
-            return new Tuple2<>(id, treeMap);
+            return new Tuple2<>(timestampFromDataset, treeMap.get(timestampFromDataset));
+
+            //return new Tuple2<>(id, treeMap);
         }
 
         // Find the next lower timestamp in the TreeMap
@@ -35,9 +37,11 @@ public class MergeTreeMapwithDataSet implements CrossFunction<Tuple2<GradoopId, 
         }
 
         // Create a new TreeMap with the updated value
-        TreeMap<Long, Integer> newTreeMap = new TreeMap<>(treeMap);
-        newTreeMap.put(timestampFromDataset, value);
+        //TreeMap<Long, Integer> newTreeMap = new TreeMap<>(treeMap);
+        return new Tuple2<>(timestampFromDataset, value);
 
-        return new Tuple2<>(id, newTreeMap);
+        //return new Tuple2<>(id, newTreeMap);
+
+        // ziel return return tuple2<long, integer>
     }
 }

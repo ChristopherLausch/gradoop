@@ -15,6 +15,7 @@
  */
 package org.gradoop.temporal.model.impl.operators.metric;
 
+import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.flink.model.impl.operators.sampling.functions.VertexDegree;
@@ -53,7 +54,9 @@ public class AvgDegreeEvolution extends BaseAggregateDegreeEvolution {
     @Override
     public DataSet<Tuple3<Long, Long, Float>> execute(TemporalGraph graph) {
         return preProcess(graph)
+                .groupBy(0)
                 .reduceGroup(new GroupDegreeTreesToAggregateDegrees(AggregationType.AVG))
+                .sortPartition(0, Order.ASCENDING).setParallelism(1)
                 .mapPartition(new MapDegreesToInterval());
     }
 }

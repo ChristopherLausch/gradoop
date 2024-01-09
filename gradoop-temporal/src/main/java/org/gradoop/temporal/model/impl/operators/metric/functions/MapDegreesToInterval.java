@@ -14,6 +14,7 @@ public class MapDegreesToInterval implements MapPartitionFunction<Tuple2<Long, F
 
         for (Tuple2<Long, Float> tuple : values) {
             if (startTimestamp == null) {
+                out.collect(new Tuple3<>(Long.MIN_VALUE, tuple.f0, 0f));
                 // First element in the group
                 startTimestamp = tuple.f0;
                 endTimestamp = tuple.f0;
@@ -34,7 +35,7 @@ public class MapDegreesToInterval implements MapPartitionFunction<Tuple2<Long, F
 
         // Emit the last interval in the group
         if (startTimestamp != null) {
-            out.collect(new Tuple3<>(startTimestamp, endTimestamp + 1, value));
+           // out.collect(new Tuple3<>(startTimestamp, endTimestamp + 1, value));
         }
     }
 

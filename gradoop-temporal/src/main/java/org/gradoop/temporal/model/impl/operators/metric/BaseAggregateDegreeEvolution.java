@@ -80,21 +80,27 @@ abstract class BaseAggregateDegreeEvolution
                 .map(new TransformDeltaToAbsoluteDegreeTree());
 
         DataSet<Tuple1<Long>> timestamps = graph.getEdges()
-                .flatMap(new GetTimestamps(dimension, degreeType));
+                .flatMap(new GetTimestamps(dimension, degreeType)).distinct();
 
         //sort the timestamps -> Parallelism needs to be set to 1 to sort all timestamps in one job
+        /*
         DataSet<Tuple1<Long>> sortedTimestamps = timestamps
                 .sortPartition(0, Order.ASCENDING)
                 .setParallelism(1);
+        */
 
-
-        DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> mergedTrees = absoluteTrees
-                .cross(sortedTimestamps)
+        /*DataSet<Tuple2<GradoopId, TreeMap<Long, Integer>>> mergedTrees = absoluteTrees
+                .cross(timestamps)
                 .with(new MergeTreeMapwithDataSet())
                 .groupBy(0)
                 .reduceGroup(new GroupMergedAbsoluteTrees());
+*/
+        return absoluteTrees
+                .cross(timestamps)
+                .with(new MergeTreeMapwithDataSet());
 
-        return mergedTrees.flatMap(new FlatMapAbsoluteTreesToDataSet());
+
+        //return mergedTrees.flatMap(new FlatMapAbsoluteTreesToDataSet());
 
 
     }
